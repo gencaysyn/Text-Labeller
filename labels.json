@@ -1,0 +1,4 @@
+{
+    "labels": ["Korku", "Kızgınlık", "Mutluluk", "İğrenme", "Üzüntü", "Nötr", "Şaşkınlık", "Umut"],
+    "split_pattern": "\\. |\\? |\\! |\\.\\.\\. "
+}
