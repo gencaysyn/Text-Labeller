@@ -154,7 +154,10 @@ class EtiketlemeEkrani(object):
         self.index = 0
         text = pdf.toText()
         self.sentences = re.split(pattern, text)
-        
+        terminators = re.findall(pattern, text)
+        print(terminators[:10], len(terminators))
+        for idx, term in enumerate(terminators):
+            self.sentences[idx] += term
         # for sentence in list(self.sentences):
         #     if len(sentence.replace(" ", "").replace("\n", "")) < 1:
         #         self.sentences.remove(sentence)
