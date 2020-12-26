@@ -29,7 +29,7 @@ class PDFHandler:
         max_ = len(blocks)
         annot_started = False
         for b in blocks:
-            t  = re.sub(r"\n\s*", "", b[4])
+            t = re.sub(r"\n\s*", "", b[4])
             t_ = t.replace(' ', '')
             if t_.startswith("*") or t_.startswith("�") or t_.startswith("•"):
                 annot_started = True
