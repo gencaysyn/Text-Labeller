@@ -20,6 +20,7 @@ import json
 
 ui2 = None
 
+
 class GirisEkrani(object):
     def setupUi(self, MainWindow):
         self.mw = MainWindow
@@ -60,7 +61,7 @@ class GirisEkrani(object):
         pix = self.pdf.toImage()
         image = QImage(pix.samples,
                        pix.width, pix.height,
-                       pix.stride,  
+                       pix.stride,
                        QImage.Format_RGB888)
 
         self.label.setPixmap(QPixmap.fromImage(image))
@@ -133,27 +134,27 @@ class EtiketlemeEkrani(object):
         self.gridLayout.addWidget(self.label_blank0, 2, 1, 1, 5)
         with open("labels.json", "r", encoding='utf8') as f:
             d = json.loads(f.read())
-            duygular= d["labels"]
+            duygular = d["labels"]
             split_pattern = d["split_pattern"]
         _translate = QtCore.QCoreApplication.translate
         self.pushButton_geri.setText(_translate("MainWindow", "Geri"))
         for idx, duygu in enumerate(duygular):
-            #print(idx, duygu)
+            # print(idx, duygu)
             button = QtWidgets.QPushButton(self.centralwidget)
-            button.setObjectName(duygu+"_button")
-            button.clicked.connect(lambda a,d=duygu: self.save_and_next(d))
+            button.setObjectName(duygu + "_button")
+            button.clicked.connect(lambda a, d=duygu: self.save_and_next(d))
             button.setText(_translate("MainWindow", duygu))
-            self.gridLayout.addWidget(button, idx//7+3, idx % 7, 1, 1) 
-        
+            self.gridLayout.addWidget(button, idx // 7 + 3, idx % 7, 1, 1)
+
         MainWindow.setCentralWidget(self.centralwidget)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.handle_pdf(pdf, split_pattern)
-        
 
     def handle_pdf(self, pdf, pattern=r"\. |\? |\! |\.\.\. "):
         self.index = 0
         text = pdf.toText()
         self.sentences = re.split(pattern, text)
+
         terminators = re.findall(pattern, text)
         print(terminators[:10], len(terminators))
         for idx, term in enumerate(terminators):
@@ -171,50 +172,51 @@ class EtiketlemeEkrani(object):
         i = 0
         for idx in will_delete:
             print(idx)
-            self.sentences.pop(idx-i)
-            i+=1
-
+            self.sentences.pop(idx - i)
+            i += 1
+        self.original_sentences = self.sentences.copy()
         self.num_of_sentences = len(self.sentences)
-        
+
         self.labels = [None] * self.num_of_sentences
         print(self.num_of_sentences)
         self.plainTextEdit_cumle.setPlainText(self.sentences[self.index])
-
 
     def show_next_sentence(self):
         if self.num_of_sentences > self.index:
             self.index += 1
             self.plainTextEdit_cumle.setPlainText(self.sentences[self.index])
 
-
     def show_previous_sentence(self):
         if self.index > 0:
             self.index -= 1
             self.plainTextEdit_cumle.setPlainText(self.sentences[self.index])
 
-
     def save_label(self, label):
         self.labels[self.index] = label
+        self.sentences[self.index] = self.plainTextEdit_cumle.toPlainText()
         self.save_to_file()
 
     def save_and_next(self, val):
         print(val)
         self.save_label(val)
         self.show_next_sentence()
-    
+
+
     def clicked_geri(self):
         print("geri")
         self.show_previous_sentence()
 
     def save_to_file(self):
-        with open("labelled_data.json", "w+",encoding='utf8') as f:
+        with open("labelled_data.json", "w+", encoding='utf8') as f:
             data = []
-            for label, sentence in zip(self.labels, self.sentences):
+            for label, sentence, original_sentence in zip(self.labels, self.sentences, self.original_sentences):
                 data.append({
+                    "original_sentence": original_sentence,
                     "sentence": sentence,
                     "label": label
                 })
             json.dump(data, f, ensure_ascii=False)
+
 
 if __name__ == "__main__":
     import sys
@@ -224,7 +226,7 @@ if __name__ == "__main__":
     ui = GirisEkrani()
     ui.setupUi(MainWindow)
 
-    mw2 =  QtWidgets.QMainWindow()
+    mw2 = QtWidgets.QMainWindow()
     ui2 = EtiketlemeEkrani(mw2)
 
     MainWindow.show()
