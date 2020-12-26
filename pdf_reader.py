@@ -6,7 +6,7 @@ class PDFHandler:
         self.current_page = 0
         self.pdf = fitz.open(name)
         self.num_pages = self.pdf.pageCount
-
+        self.name = name
     def nextPage(self):
         if self.current_page < self.num_pages -1:
             self.current_page += 1

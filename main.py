@@ -20,7 +20,6 @@ import json
 
 ui2 = None
 
-
 class GirisEkrani(object):
     def setupUi(self, MainWindow):
         self.mw = MainWindow
@@ -52,6 +51,7 @@ class GirisEkrani(object):
         ##############################################################
 
         self.file_path = None
+        file_p = self.file_path
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.pushButton_3.clicked.connect(self.clicked_dosyaSec)
         self.pushButton.clicked.connect(self.clicked_once)
@@ -108,6 +108,7 @@ class EtiketlemeEkrani(object):
     def setupUi(self, pdf):
         MainWindow = self.MainWindow
         self.pdf = pdf
+        self.file_path = pdf.name
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(879, 418)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -201,13 +202,12 @@ class EtiketlemeEkrani(object):
         self.save_label(val)
         self.show_next_sentence()
 
-
     def clicked_geri(self):
         print("geri")
         self.show_previous_sentence()
 
     def save_to_file(self):
-        with open("labelled_data.json", "w+", encoding='utf8') as f:
+        with open(self.pdf.name.split(".")[0]+"_labelled.json", "w+", encoding='utf8') as f:
             data = []
             for label, sentence, original_sentence in zip(self.labels, self.sentences, self.original_sentences):
                 data.append({
