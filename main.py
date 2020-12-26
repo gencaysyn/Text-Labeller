@@ -17,8 +17,10 @@ from pathlib import Path
 import re
 import copy
 import json
+import os
 
 ui2 = None
+
 
 class GirisEkrani(object):
     def setupUi(self, MainWindow):
@@ -75,15 +77,22 @@ class GirisEkrani(object):
         self.pdf.nextPage()
         self.render_page()
 
+    def check_file(self):
+        file_name = str(os.path.basename(self.file_path)).split(".")[0] + ".json"
+        return file_name in os.listdir('./')
+
     def clicked_dosyaSec(self):
+
         if self.file_path is None:
             options = QFileDialog.Options()
             fname = QFileDialog.getOpenFileName(QtWidgets.QMainWindow(), "QFileDialog.getOpenFileName()", "",
                                                 "PDF Files (*.pdf)", options=options)
             self.pushButton_3.setText("Sayfayı Seç")
             self.file_path = fname[0]
-            self.pdf = PDFHandler(self.file_path)
-            self.render_page()
+            if not self.check_file():
+                self.pdf = PDFHandler(self.file_path)
+                self.render_page()
+            ## Dosya varsa yapılacak işlemler
         else:
             ui2.setupUi(self.pdf)
             ui2.show()
@@ -207,7 +216,7 @@ class EtiketlemeEkrani(object):
         self.show_previous_sentence()
 
     def save_to_file(self):
-        with open(self.pdf.name.split(".")[0]+"_labelled.json", "w+", encoding='utf8') as f:
+        with open(self.pdf.name.split(".")[0] + ".json", "w+", encoding='utf8') as f:
             data = []
             for label, sentence, original_sentence in zip(self.labels, self.sentences, self.original_sentences):
                 data.append({
