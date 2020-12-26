@@ -1,4 +1,0 @@
-{
-    "labels": ["Korku", "Öfke", "Nötr","Mutluluk","Üzüntü"],
-    "split_pattern": "\\. |\\? |\\! |\\.\\.\\. "
-}

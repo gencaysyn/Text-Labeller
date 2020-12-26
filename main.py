@@ -53,7 +53,6 @@ class GirisEkrani(object):
         ##############################################################
 
         self.file_path = None
-        file_p = self.file_path
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.pushButton_3.clicked.connect(self.clicked_dosyaSec)
         self.pushButton.clicked.connect(self.clicked_once)
@@ -78,13 +77,9 @@ class GirisEkrani(object):
         self.render_page()
 
     def check_file(self):
-        file_name = str(os.path.basename(self.file_path)).split(".")[0] + ".json"
-        return file_name in os.listdir('./')
-
-    def read_json(self,file_name):
-        file_path = "./"+file_name
-        with open(file_path,"r"):
-
+        self.file_name = os.path.splitext(os.path.basename(self.file_path))[0]+".json" #str(os.path.basename(self.file_path)).split(".")[0] + ".json"
+        print(self.file_name)
+        return self.file_name in os.listdir('./')
 
     def clicked_dosyaSec(self):
 
@@ -97,12 +92,54 @@ class GirisEkrani(object):
             if not self.check_file():
                 self.pdf = PDFHandler(self.file_path)
                 self.render_page()
+            else:
+                self.handle_json()
+                ui2.setupUi(self.index, self.sentences, self.labels, self.edited_sentences, self.file_name)
+                ui2.show()
+                self.mw.hide()
+
             ## Dosya varsa yapılacak işlemler
         else:
-            ui2.setupUi(self.pdf)
+            self.handle_pdf()
+            ui2.setupUi(self.index, self.sentences, self.labels, self.edited_sentences, self.file_name)
             ui2.show()
             self.mw.hide()
 
+    def handle_json(self):
+        self.sentences = []
+        self.labels = []
+        self.edited_sentences = []
+
+        with open(self.file_name, "r", encoding='utf8') as f:
+            d = json.loads(f.read())
+            self.index = d["last_index"]
+            for item in d["data"]:
+                self.sentences.append(item["original_sentence"])
+                self.labels.append(item["label"])
+                self.edited_sentences.append(item["edited_sentence"])
+
+    def handle_pdf(self):
+        pattern=r"\. |\? |\! |\.\.\. "
+        self.index = 0
+        text = self.pdf.toText()
+        self.sentences = re.split(pattern, text)
+        terminators = re.findall(pattern, text)
+        for idx, term in enumerate(terminators):
+            self.sentences[idx] += term
+        will_delete = []
+        for idx, sentence in enumerate(self.sentences):
+            if len(sentence.replace(" ", "").replace("\n", "")) < 1:
+                will_delete.append(idx)
+        i = 0
+        for idx in will_delete:
+            self.sentences.pop(idx - i)
+            i += 1
+        nofs = len(self.sentences)
+        self.edited_sentences = [None] * nofs
+        self.labels = [None] * nofs
+        print(nofs)
+        
+    
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Select where to start"))
@@ -119,10 +156,18 @@ class EtiketlemeEkrani(object):
     def show(self):
         self.MainWindow.show()
 
-    def setupUi(self, pdf):
+    def setupPdf(self, index, sentences, labels, edited_sentences):
+        self.index = index
+        self.sentences = sentences
+        self.labels = labels
+        self.edited_sentences = edited_sentences
+        self.original_sentences = self.sentences.copy()
+        self.num_of_sentences = len(self.sentences)
+
+
+    def setupUi(self, index, sentences, labels, edited_sentences, file_path):
+        self.setupPdf(index, sentences, labels, edited_sentences)
         MainWindow = self.MainWindow
-        self.pdf = pdf
-        self.file_path = pdf.name
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(879, 418)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -147,10 +192,9 @@ class EtiketlemeEkrani(object):
         self.label_blank0.setText("")
         self.label_blank0.setObjectName("label_blank0")
         self.gridLayout.addWidget(self.label_blank0, 2, 1, 1, 5)
-        with open("labels.json", "r", encoding='utf8') as f:
+        with open("./config/labels.json", "r", encoding='utf8') as f:
             d = json.loads(f.read())
             duygular = d["labels"]
-            split_pattern = d["split_pattern"]
         _translate = QtCore.QCoreApplication.translate
         self.pushButton_geri.setText(_translate("MainWindow", "Geri"))
         for idx, duygu in enumerate(duygular):
@@ -163,38 +207,10 @@ class EtiketlemeEkrani(object):
 
         MainWindow.setCentralWidget(self.centralwidget)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        self.handle_pdf(pdf, split_pattern)
-
-    def handle_pdf(self, pdf, pattern=r"\. |\? |\! |\.\.\. "):
-        self.index = 0
-        text = pdf.toText()
-        self.sentences = re.split(pattern, text)
-
-        terminators = re.findall(pattern, text)
-        print(terminators[:10], len(terminators))
-        for idx, term in enumerate(terminators):
-            self.sentences[idx] += term
-        # for sentence in list(self.sentences):
-        #     if len(sentence.replace(" ", "").replace("\n", "")) < 1:
-        #         self.sentences.remove(sentence)
-        #         print(sentence)
-
-        will_delete = []
-        for idx, sentence in enumerate(self.sentences):
-            if len(sentence.replace(" ", "").replace("\n", "")) < 1:
-                will_delete.append(idx)
-        print(len(self.sentences))
-        i = 0
-        for idx in will_delete:
-            print(idx)
-            self.sentences.pop(idx - i)
-            i += 1
-        self.original_sentences = self.sentences.copy()
-        self.num_of_sentences = len(self.sentences)
-
-        self.labels = [None] * self.num_of_sentences
-        print(self.num_of_sentences)
+        
+        self.file_path = file_path
         self.plainTextEdit_cumle.setPlainText(self.sentences[self.index])
+    
 
     def show_next_sentence(self):
         if self.num_of_sentences > self.index:
@@ -212,26 +228,25 @@ class EtiketlemeEkrani(object):
         self.save_to_file()
 
     def save_and_next(self, val):
-        print(val)
         self.save_label(val)
         self.show_next_sentence()
 
     def clicked_geri(self):
-        print("geri")
         self.show_previous_sentence()
 
     def save_to_file(self):
-        with open(self.pdf.name.split(".")[0] + ".json", "w+", encoding='utf8') as f:
+        with open(self.file_path.split(".")[0] + ".json", "w+", encoding='utf8') as f:
             data = []
             for label, sentence, original_sentence in zip(self.labels, self.sentences, self.original_sentences):
                 data.append({
                     "original_sentence": original_sentence,
-                    "sentence": sentence,
+                    "edited_sentence": sentence,
                     "label": label
                 })
-            data = {"data": data,
-                    "last_index":self.index
-                    }
+            data = {
+                "data": data,
+                "last_index": self.index + 1
+            }
             json.dump(data, f, ensure_ascii=False)
 
 
