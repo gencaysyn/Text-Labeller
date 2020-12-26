@@ -81,6 +81,11 @@ class GirisEkrani(object):
         file_name = str(os.path.basename(self.file_path)).split(".")[0] + ".json"
         return file_name in os.listdir('./')
 
+    def read_json(self,file_name):
+        file_path = "./"+file_name
+        with open(file_path,"r"):
+
+
     def clicked_dosyaSec(self):
 
         if self.file_path is None:
@@ -224,6 +229,9 @@ class EtiketlemeEkrani(object):
                     "sentence": sentence,
                     "label": label
                 })
+            data = {"data": data,
+                    "last_index":self.index
+                    }
             json.dump(data, f, ensure_ascii=False)
 
 
