@@ -1,16 +1,18 @@
 import sys, fitz
 import re
 
+
 class PDFHandler:
     def __init__(self, name):
         self.current_page = 0
         self.pdf = fitz.open(name)
         self.num_pages = self.pdf.pageCount
         self.name = name
+
     def nextPage(self):
-        if self.current_page < self.num_pages -1:
+        if self.current_page < self.num_pages - 1:
             self.current_page += 1
-    
+
     def prevPage(self):
         if self.current_page > 0:
             self.current_page -= 1
@@ -33,7 +35,7 @@ class PDFHandler:
             t_ = t.replace(' ', '')
             if t_.startswith("*") or t_.startswith("�") or t_.startswith("•"):
                 annot_started = True
-            
+
             if annot_started or len(t) < 10:
                 page.drawRect(fitz.Rect(b[:-3]), color=(1, 0, 0))
             else:
@@ -43,15 +45,14 @@ class PDFHandler:
         return text, page
 
     def toText(self):
-        blocks = self.pdf[7].getText("blocks")
-        page = self.handleBlocks(blocks, self.pdf[7])    
-
+        # blocks = self.pdf[0].getText("blocks")
+        # page = self.handleBlocks(blocks, self.pdf[7])
         pdfText = ""
         for i in range(self.current_page, self.num_pages):  # iterate the document pages
             page = self.pdf[i]
             blocks = page.getText("blocks")
             text, _ = self.handleBlocks(blocks, page)
-            if text  is not None:
+            if text is not None:
                 pdfText += text + " "
         return pdfText
 

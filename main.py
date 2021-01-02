@@ -18,6 +18,8 @@ import re
 import copy
 import json
 import os
+from IPython.core.debugger import Tracer; debug_here = Tracer()
+
 
 ui2 = None
 
@@ -143,8 +145,8 @@ class GirisEkrani(object):
         self.original_sentences = self.sentences.copy()
         self.labels = [""] * nofs
         print(nofs)
-        
-    
+
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Select where to start"))
@@ -233,7 +235,7 @@ class EtiketlemeEkrani(object):
 
         MainWindow.setCentralWidget(self.centralwidget)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        
+
         self.file_path = file_path
         self.plainTextEdit_cumle.setPlainText(self.sentences[self.index])
         self.label_original_sentence.setPlainText(self.original_sentences[self.index])
